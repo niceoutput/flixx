@@ -57,8 +57,12 @@ async function displayMovieDetails() {
     revenue,
     runtime,
     status,
-    production_companies
+    production_companies,
+    backdrop_path
     } = await fetchAPIData(`movie/${movieId}`);
+
+    // Overlay for background image
+    displayBackgroundImage('movie', backdrop_path);
 
   const div = document.createElement('div');
 
@@ -76,8 +80,7 @@ async function displayMovieDetails() {
               class="card-img-top"
               alt="${title}"
             />`
-      }="Movie Title"
-        />
+      }
       </div>
       <div>
         <h2>${title}</h2>
@@ -110,6 +113,98 @@ async function displayMovieDetails() {
   document.getElementById('movie-details').appendChild(div);
 }
 
+//Display backdrop on Details pages
+function displayBackgroundImage(type, backgroundPath) {
+  const overlayDiv = document.createElement('div');
+
+  overlayDiv.style.backgroundImage = `url(https://image.tmdb.org/t/p/original/${backgroundPath})`;
+  overlayDiv.style.backgroundSize = 'cover';
+  overlayDiv.style.backgroundPosition = 'center';
+  overlayDiv.style.backgroundRepeat = 'no-repeat';
+  overlayDiv.style.height = '100vh';
+  overlayDiv.style.width = '100vw';
+  overlayDiv.style.position = 'absolute';
+  overlayDiv.style.top = '0';
+  overlayDiv.style.left = '0';
+  overlayDiv.style.zIndex = '-1';
+  overlayDiv.style.opacity = '0.1';
+
+  type === 'movie'
+    ? document.getElementById('movie-details').appendChild(overlayDiv)
+    : document.getElementById('show-details').appendChild(overlayDiv);
+}
+
+// Display show details
+async function displayShowDetails() {
+  const showId = window.location.search.split('=')[1];
+
+  const {
+    name,
+    poster_path,
+    vote_average,
+    last_air_date,
+    overview,
+    genres,
+    homepage,
+    number_of_episodes,
+    last_episode_to_air: {air_date},
+    runtime,
+    status,
+    production_companies,
+    backdrop_path
+    } = await fetchAPIData(`tv/${showId}`);
+
+    // Overlay for background image
+    displayBackgroundImage('tv', backdrop_path);
+
+  const div = document.createElement('div');
+
+  div.innerHTML = `
+    <div class="details-top">
+      <div>
+        ${poster_path
+        ? `<img
+            src="https://image.tmdb.org/t/p/w500${poster_path}"
+            class="card-img-top"
+            alt="${name}"
+          />`
+        : `<img
+              src="images/no-image.jpg"
+              class="card-img-top"
+              alt="${name}"
+            />`
+      }
+      </div>
+      <div>
+        <h2>${name}</h2>
+        <p>
+          <i class="fas fa-star text-primary"></i>
+          ${vote_average.toFixed(1)} / 10
+        </p>
+        <p class="text-muted">Release Date: ${last_air_date}</p>
+        <p>${overview}</p>
+        <h5>Genres</h5>
+        <ul class="list-group">
+          ${genres.map(({name}) => `<li>${name}</li>`).join('')}
+        </ul>
+        <a href="${homepage}" target="_blank" class="btn">Visit Movie Homepage</a>
+      </div>
+    </div>
+    <div class="details-bottom">
+      <h2>Show Info</h2>
+      <ul>
+        <li><span class="text-secondary">Number of episodes: </span> ${number_of_episodes}</li>
+        <li><span class="text-secondary">Last episode to air:</span> ${air_date} </li>
+        <li><span class="text-secondary">Status:</span> ${status}</li>
+      </ul>
+      <h4>Production Companies</h4>
+      <div class="list-group">${production_companies.map(({name}) => `<span>${name}</span>`).join('')}</div>
+    </div>
+  `;
+
+  document.getElementById('show-details').appendChild(div);
+}
+
 // Fetch data from TMDB API
 async function fetchAPIData(endpoint) {
   const API_KEY = '5b1f7a4fa8b3886298391bea093cdf5a';
@@ -133,7 +228,7 @@ function highlightActiveLink() {
 }
 
 function addCommasToNumber(number) {
-  return number.toString().replace(/B(?=(d{3})+(?!d))/g, ',');
+  return number.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',');
 }
 
 // Init App
@@ -155,6 +250,7 @@ function init() {
       break;
 
     case '/tv-details.html':
+      displayShowDetails();
       console.log('TV Details');
       break;
 
