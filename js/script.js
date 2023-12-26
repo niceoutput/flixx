@@ -4,6 +4,57 @@ const global = {
 
 console.log(global.currentPage)
 
+// Display Slider
+async function displaySlider() {
+  const { results } = await fetchAPIData('movie/now_playing');
+
+  console.log(results);
+  results.forEach((result) => {
+    const div = document.createElement('div');
+    div.classList.add('swiper-slide');
+
+    div.innerHTML = `
+      <a href="movie-details.html?id=${result.id}">
+        <img src="https://image.tmdb.org/t/p/w500${result.poster_path}" alt="${result.title}" />
+      </a>
+      <h4 class="swiper-rating">
+        <i class="fas fa-star text-secondary"></i> ${Math.ceil(result.vote_average)} / 10
+      </h4>
+    `;
+
+    document.querySelector('.swiper-wrapper').appendChild(div);
+
+    initSwiper();
+  })
+}
+
+function initSwiper() {
+  const swiper = new Swiper('.swiper', {
+  // Default parameters
+  slidesPerView: 1,
+  spaceBetween: 10,
+  // Responsive breakpoints
+  breakpoints: {
+    // when window width is >= 320px
+    320: {
+      slidesPerView: 1,
+      spaceBetween: 10
+    },
+    // when window width is >= 480px
+    480: {
+      slidesPerView: 2,
+      spaceBetween: 10
+    },
+    // when window width is >= 640px
+    640: {
+      slidesPerView: 4,
+      spaceBetween: 20
+    }
+  }
+})
+
+}
+
 async function displayPopularMovies() {
   const { results } = await fetchAPIData('movie/popular');
   results.forEach(({id, poster_path, title, release_date}) => {
@@ -39,6 +90,41 @@ async function displayPopularMovies() {
     movieGrid.append(div);
 
   })
+}
+
+// Display Popular Show
+async function displayPopularShows() {
+  const { results } = await fetchAPIData('tv/popular');
+
+  results.forEach((show) => {
+    const div = document.createElement('div');
+    div.classList.add('card');
+    div.innerHTML = `
+          <a href="tv-details.html?id=${show.id}">
+            ${
+              show.poster_path
+                ? `<img
+              src="https://image.tmdb.org/t/p/w500${show.poster_path}"
+              class="card-img-top"
+              alt="${show.name}"
+            />`
+                : `<img
+            src="../images/no-image.jpg"
+            class="card-img-top"
+            alt="${show.name}"
+          />`
+            }
+          </a>
+          <div class="card-body">
+            <h5 class="card-title">${show.name}</h5>
+            <p class="card-text">
+              <small class="text-muted">Air Date: ${show.first_air_date}</small>
+            </p>
+          </div>
+        `;
+
+    document.querySelector('#popular-shows').appendChild(div);
+  });
 }
 
 // Display movie details
@@ -236,12 +322,14 @@ function init() {
   switch (global.currentPage) {
     case '/':
     case 'index.html':
+      displaySlider();
       displayPopularMovies();
       console.log('Home');
       break;
 
     case '/shows.html':
       console.log('Shows');
+      displayPopularShows();
       break;
 
     case '/movie-details.html':
